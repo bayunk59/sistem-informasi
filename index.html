@@ -1284,6 +1284,8 @@ const firebaseConfig = {
   appId: "1:781797572922:web:a333bafa862e80d73b1003"
 };
 
+{`// ========================================== // FIRESTORE SYNC FUNCTIONS // ========================================== // Simpan satu collection ke Firestore async function saveCollection(collectionName, dataArray) { if (!IS_USING_FIREBASE) return; const batch = db.batch(); // Hapus data lama const snapshot = await db.collection(collectionName).get(); snapshot.forEach(doc => batch.delete(doc.ref)); // Simpan data baru dataArray.forEach(item => { const id = item.id || crypto.randomUUID(); item.id = id; batch.set(db.collection(collectionName).doc(id), item); }); await batch.commit(); } // Ambil satu collection dari Firestore async function loadCollection(collectionName) { if (!IS_USING_FIREBASE) return []; const snapshot = await db.collection(collectionName).get(); return snapshot.docs.map(doc => doc.data()); } // Load semua data dari Firestore saat aplikasi dibuka async function loadAllDataFromFirestore() { if (!IS_USING_FIREBASE) return; try { SIAS_DB.guru = await loadCollection("guru"); SIAS_DB.kelas = await loadCollection("kelas"); SIAS_DB.mapel = await loadCollection("mapel"); SIAS_DB.siswa = await loadCollection("siswa"); SIAS_DB.jadwal = await loadCollection("jadwal"); SIAS_DB.jurnalGuru = await loadCollection("jurnalGuru"); SIAS_DB.jurnalWali = await loadCollection("jurnalWali"); SIAS_DB.audit = await loadCollection("audit"); // Settings const settingsDoc = await db.collection("settings").doc("app").get(); if (settingsDoc.exists) { SIAS_DB.settings = settingsDoc.data(); } console.log("Data berhasil dimuat dari Firestore"); } catch (e) { console.error("Gagal load Firestore:", e); } }`}    
+    
 let IS_USING_FIREBASE = false;
 let db = null;
 let auth = null;
@@ -1405,27 +1407,29 @@ window.logAudit = async function(user, modul, aktivitas) {
     populateAuditTable();
 };
 
-window.persistLocal = async function() {
-    localStorage.setItem('SIAS_GURU', JSON.stringify(SIAS_DB.guru));
-    localStorage.setItem('SIAS_KELAS', JSON.stringify(SIAS_DB.kelas));
-    localStorage.setItem('SIAS_MAPEL', JSON.stringify(SIAS_DB.mapel));
-    localStorage.setItem('SIAS_SISWA', JSON.stringify(SIAS_DB.siswa));
-    localStorage.setItem('SIAS_JADWAL', JSON.stringify(SIAS_DB.jadwal));
-    localStorage.setItem('SIAS_JURNAL_GURU', JSON.stringify(SIAS_DB.jurnalGuru));
-    localStorage.setItem('SIAS_JURNAL_WALI', JSON.stringify(SIAS_DB.jurnalWali));
-    localStorage.setItem('SIAS_PENILAIAN', JSON.stringify(SIAS_DB.penilaian));
-    localStorage.setItem('SIAS_KOMPONEN', JSON.stringify(SIAS_DB.komponen));
-    localStorage.setItem('SIAS_SETTINGS', JSON.stringify(SIAS_DB.settings));
+// window.persistLocal = async function() {
+//     localStorage.setItem('SIAS_GURU', JSON.stringify(SIAS_DB.guru));
+//     localStorage.setItem('SIAS_KELAS', JSON.stringify(SIAS_DB.kelas));
+//     localStorage.setItem('SIAS_MAPEL', JSON.stringify(SIAS_DB.mapel));
+//     localStorage.setItem('SIAS_SISWA', JSON.stringify(SIAS_DB.siswa));
+//     localStorage.setItem('SIAS_JADWAL', JSON.stringify(SIAS_DB.jadwal));
+//     localStorage.setItem('SIAS_JURNAL_GURU', JSON.stringify(SIAS_DB.jurnalGuru));
+//     localStorage.setItem('SIAS_JURNAL_WALI', JSON.stringify(SIAS_DB.jurnalWali));
+//     localStorage.setItem('SIAS_PENILAIAN', JSON.stringify(SIAS_DB.penilaian));
+//     localStorage.setItem('SIAS_KOMPONEN', JSON.stringify(SIAS_DB.komponen));
+//     localStorage.setItem('SIAS_SETTINGS', JSON.stringify(SIAS_DB.settings));
 
-    // Sinkronisasi penuh ke cloud Firebase (Firestore) jika terhubung
-    if (IS_USING_FIREBASE) {
-        try {
-            await db.collection("pengaturan").doc("app_settings").set(SIAS_DB.settings);
-        } catch (e) {
-            console.warn("Gagal sinkronisasi offline-to-cloud: ", e);
-        }
-    }
-};
+//     // Sinkronisasi penuh ke cloud Firebase (Firestore) jika terhubung
+//     if (IS_USING_FIREBASE) {
+//         try {
+//             await db.collection("pengaturan").doc("app_settings").set(SIAS_DB.settings);
+//         } catch (e) {
+//             console.warn("Gagal sinkronisasi offline-to-cloud: ", e);
+//         }
+//     }
+// };
+
+{`window.persistLocal = async function() { // Cache offline localStorage.setItem('SIAS_GURU', JSON.stringify(SIAS_DB.guru)); localStorage.setItem('SIAS_KELAS', JSON.stringify(SIAS_DB.kelas)); localStorage.setItem('SIAS_MAPEL', JSON.stringify(SIAS_DB.mapel)); localStorage.setItem('SIAS_SISWA', JSON.stringify(SIAS_DB.siswa)); localStorage.setItem('SIAS_JADWAL', JSON.stringify(SIAS_DB.jadwal)); localStorage.setItem('SIAS_JURNAL_GURU', JSON.stringify(SIAS_DB.jurnalGuru)); localStorage.setItem('SIAS_JURNAL_WALI', JSON.stringify(SIAS_DB.jurnalWali)); localStorage.setItem('SIAS_SETTINGS', JSON.stringify(SIAS_DB.settings)); // Sinkron ke Firestore if (IS_USING_FIREBASE) { try { await saveCollection("guru", SIAS_DB.guru); await saveCollection("kelas", SIAS_DB.kelas); await saveCollection("mapel", SIAS_DB.mapel); await saveCollection("siswa", SIAS_DB.siswa); await saveCollection("jadwal", SIAS_DB.jadwal); await saveCollection("jurnalGuru", SIAS_DB.jurnalGuru); await saveCollection("jurnalWali", SIAS_DB.jurnalWali); await saveCollection("audit", SIAS_DB.audit); // Settings await db.collection("settings") .doc("app") .set(SIAS_DB.settings); console.log("Sinkron Firestore berhasil"); } catch (e) { console.error("Gagal sinkron Firestore:", e); } } };`}
 
 // Mengambil konfigurasi dari Firebase jika tersedia saat load awal
 async function loadFromFirebaseIfConnected() {
