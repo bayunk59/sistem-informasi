@@ -478,7 +478,7 @@
                         <input type="date" id="walas-input-date" class="form-control form-control-sm" onchange="loadStudentsForAttendance()">
                       </div>
                       <div class="col-4 text-end">
-                        <button class="btn btn-xs btn-outline-secondary w-100 py-1.5" style="font-size: 0.7rem; margin-top: 22px;" onclick="markAllAttendance('Hadir')">Set Hadir</button>
+                        <button class="btn btn-xs btn-outline-secondary w-100 py-1.5" style="font-size: 0.70rem; margin-top: 22px;" onclick="markAllAttendance('Hadir')">Set Hadir</button>
                       </div>
                     </div>
 
@@ -726,9 +726,18 @@
 
   <!-- ==================== STREAMING_CHUNK: Inisialisasi JavaScript & Logika Penyelarasan Perangkat Mobile ==================== -->
   <script>
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'portal-guru-sma';
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'absensi-smana';
     let db, auth;
     let isRealFirebase = false;
+
+    const userFirebaseConfig = {
+      apiKey: "AIzaSyBmpxZ6B3zLfbzApHZEFlSCQJd7Pksj1HI",
+      authDomain: "absensi-smana.firebaseapp.com",
+      projectId: "absensi-smana",
+      storageBucket: "absensi-smana.firebasestorage.app",
+      messagingSenderId: "901060737280",
+      appId: "1:901060737280:web:ce7866c2db6903a342dbe5"
+    };
 
     // Local Storage Mock Databases
     const mockDb = {
@@ -752,15 +761,22 @@
     }
 
     try {
+      let configToUse = null;
       if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = firebase.initializeApp(firebaseConfig);
+        configToUse = JSON.parse(__firebase_config);
+      } else {
+        configToUse = userFirebaseConfig;
+      }
+
+      if (configToUse) {
+        const app = firebase.initializeApp(configToUse);
         db = firebase.firestore(app);
         auth = firebase.auth(app);
         isRealFirebase = true;
+        console.log("Firebase berhasil terhubung dengan ID Proyek: " + configToUse.projectId);
       }
     } catch (e) {
-      console.warn("Using simulated In-Memory/LocalStorage Database Sandbox.", e);
+      console.warn("Menggunakan simulated In-Memory/LocalStorage Database Sandbox.", e);
     }
 
     let currentUser = null;
@@ -803,6 +819,7 @@
       showLoading(false);
     });
 
+    // Helper functions
     function showLoading(show) {
       document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
     }
